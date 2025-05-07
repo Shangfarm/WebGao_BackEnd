@@ -1,23 +1,24 @@
 const express = require("express");
 const router = express.Router();
 const cartItemController = require("../controllers/cartItem.controller");
+const { verifyToken } = require('../middlewares/auth.middleware');
 
-// Route: Lấy tất cả sản phẩm trong giỏ hàng của người dùng
-router.get("/:userId", cartItemController.getAllCartItems);
+//Lấy tất cả sản phẩm trong giỏ hàng của người dùng (cần đăng nhập)
+router.get("/:userId", verifyToken, cartItemController.getAllCartItems);
 
-// Route: Lấy tổng giá trị của giỏ hàng
-router.get("/:userId/total", cartItemController.calculateCartTotal);
+//Lấy tổng giá trị của giỏ hàng (cần đăng nhập)
+router.get("/:userId/total", verifyToken, cartItemController.calculateCartTotal);
 
-// Route: Lấy một sản phẩm trong giỏ hàng theo ID
-router.get("/item/:id", cartItemController.getCartItemById);
+//Lấy một sản phẩm trong giỏ hàng theo ID (cần đăng nhập)
+router.get("/item/:id", verifyToken, cartItemController.getCartItemById);
 
-// Route: Thêm sản phẩm vào giỏ hàng
-router.post("/", cartItemController.addCartItem);
+//Thêm sản phẩm vào giỏ hàng – cần đăng nhập
+router.post("/", verifyToken, cartItemController.addCartItem);
 
-// Route: Cập nhật số lượng sản phẩm trong giỏ hàng
-router.put("/:id", cartItemController.updateCartItem);
+//Cập nhật số lượng sản phẩm – cần đăng nhập
+router.put("/:id", verifyToken, cartItemController.updateCartItem);
 
-// Route: Xóa sản phẩm khỏi giỏ hàng
-router.delete("/:id", cartItemController.deleteCartItem);
+//Xóa sản phẩm khỏi giỏ hàng – cần đăng nhập
+router.delete("/:id", verifyToken, cartItemController.deleteCartItem);
 
 module.exports = router;

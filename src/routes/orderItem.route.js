@@ -1,25 +1,24 @@
 const express = require("express");
 const router = express.Router();
 const orderItemController = require("../controllers/orderItem.controller");
+const { verifyToken } = require("../middlewares/auth.middleware");
 
-// Route: Thống kê sản phẩm bán chạy
+//Route: Thống kê sản phẩm bán chạy – public
 router.get("/top-selling-products", orderItemController.getTopSellingProducts);
 
-// Route: Lấy tất cả sản phẩm trong đơn hàng
-router.get("/", orderItemController.getAllOrderItems);
+//Route: Lấy tất cả sản phẩm trong đơn hàng – yêu cầu đăng nhập
+router.get("/", verifyToken, orderItemController.getAllOrderItems);
 
-// Route: Lấy sản phẩm trong đơn hàng theo ID
-router.get("/:id", orderItemController.getOrderItemById);
+//Route: Lấy sản phẩm theo ID – yêu cầu đăng nhập
+router.get("/:id", verifyToken, orderItemController.getOrderItemById);
 
-// Route: Tạo mới một sản phẩm trong đơn hàng
-router.post("/", orderItemController.createOrderItem);
+//Route: Tạo mới sản phẩm trong đơn hàng – yêu cầu đăng nhập
+router.post("/", verifyToken, orderItemController.createOrderItem);
 
-// Route: Cập nhật sản phẩm trong đơn hàng
-router.put("/:id", orderItemController.updateOrderItem);
+//Route: Cập nhật sản phẩm trong đơn hàng – yêu cầu đăng nhập
+router.put("/:id", verifyToken, orderItemController.updateOrderItem);
 
-// Route: Xóa sản phẩm trong đơn hàng
-router.delete("/:id", orderItemController.deleteOrderItem);
-
-
+//Route: Xóa sản phẩm khỏi đơn hàng – yêu cầu đăng nhập
+router.delete("/:id", verifyToken, orderItemController.deleteOrderItem);
 
 module.exports = router;

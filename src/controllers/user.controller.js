@@ -6,6 +6,7 @@ const getAllUsers = async (req, res) => {
   try {
     const users = await userService.getAllUsers();
     res.json(users);
+    
   } catch (error) {
     res.status(500).json({ message: "Đã xảy ra lỗi", error: error.message });
   }
@@ -109,6 +110,7 @@ const getUsers = async (req, res) => {
 
     // Lấy danh sách người dùng với phân trang
     const users = await User.find(filter)
+      .select('-password')
       .skip(skip)
       .limit(parseInt(limit));
 

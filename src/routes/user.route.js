@@ -1,51 +1,33 @@
 const express = require("express");
 const router = express.Router();
 const userController = require("../controllers/user.controller");
+const { verifyToken, requireAdmin } = require("../middlewares/auth.middleware");
 
-const { getMe, updateMe } = require("../controllers/user.controller");
-const jwt = require("jsonwebtoken");
+//Route: Người dùng lấy thông tin cá nhân
+router.get("/me", verifyToken, userController.getMe);
 
-// Middleware xác thực
-const authMiddleware = async (req, res, next) => {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        return res.status(401).json({ message: "Chưa đăng nhập" });
-    }
-    const token = authHeader.split(" ")[1];
-    try {
-        const decoded = jwt.verify(token, "secret123");
-        req.user = { id: decoded.userId };
-        next();
-    } catch (err) {
-        res.status(401).json({ message: "Token không hợp lệ" });
-    }
-};
+//Route: Người dùng cập nhật thông tin cá nhân
+router.put("/update-me", verifyToken, userController.updateMe);
 
-// 💥 PHẢI đặt các route đặc biệt lên trước
-router.get('/me', authMiddleware, getMe);
-router.put('/update-me', authMiddleware, updateMe);
+//Route: Thống kê người dùng mới – Chỉ admin
+router.get("/new-users", verifyToken, requireAdmin, userController.getRegistrationStats);
 
+//Route: Lấy danh sách người dùng – Chỉ admin
+router.get("/", verifyToken, requireAdmin, userController.getUsers);
 
+//Route: Lấy người dùng theo ID – Chỉ admin
+router.get("/:id", verifyToken, requireAdmin, userController.getUserById);
 
-// Route: Lấy danh sách người dùng mới nhất
-router.get("/new-users", userController.getRegistrationStats);
+//Route: Tạo mới người dùng (chỉ admin tạo nếu dùng nội bộ)
+router.post("/", verifyToken, requireAdmin, userController.createUser);
 
-// Route lấy danh sách người dùng với phân trang, tìm kiếm, và lọc
-router.get("/", userController.getUsers);
+//Route: Admin cập nhật user
+router.put("/:id", verifyToken, requireAdmin, userController.updateUser);
 
-// Route: Lấy người dùng theo ID
-router.get("/:id", userController.getUserById);
+//Route: Xóa mềm user – Chỉ admin
+router.delete("/:id", verifyToken, requireAdmin, userController.softDeleteUser);
 
-// Route: Tạo mới một người dùng
-router.post("/", userController.createUser);
-
-// Route: Cập nhật thông tin người dùng
-router.put("/:id", userController.updateUser);
-
-// Route: Đánh dấu người dùng là đã xóa mềm
-router.delete("/:id", userController.softDeleteUser);
-
-// Route: Khôi phục người dùng đã xóa
-router.put("/restore/:id", userController.restoreUser);
+//Route: Khôi phục user – Chỉ admin
+router.put("/restore/:id", verifyToken, requireAdmin, userController.restoreUser);
 
 module.exports = router;

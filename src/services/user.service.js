@@ -2,12 +2,12 @@ const User = require("../models/UserModel");
 
 // Lấy tất cả người dùng chưa bị xóa
 const getAllUsers = async () => {
-  return await User.findActive(); // Sử dụng phương thức tĩnh findActive
+  return await User.findActive().select('-password'); // Sử dụng phương thức tĩnh findActive
 };
 
 // Lấy người dùng theo ID
 const getUserById = async (id) => {
-  return await User.findById(id);
+  return await User.findById(id).select('-password');
 };
 
 // Tạo mới một người dùng

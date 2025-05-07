@@ -1,28 +1,27 @@
 const express = require("express");
 const router = express.Router();
 const shippingMethodController = require("../controllers/shippingMethod.controller");
+const { verifyToken, requireAdmin } = require('../middlewares/auth.middleware');
 
-// Route: Lọc, tìm kiếm, phân trang phương thức vận chuyển 
+//Lọc, tìm kiếm, phân trang phương thức vận chuyển – Public
 router.get("/", shippingMethodController.getShippingMethod);
-// // Route: Lấy tổng danh sách phương thức vận chuyển
-// router.get("/", shippingMethodController.getAllShippingMethods);
 
-// Route: Lấy danh sách theo id phương thức vận chuyển
+//Lấy phương thức vận chuyển theo ID – Public
 router.get("/:id", shippingMethodController.getShippingMethodById);
 
-// Route: Thêm phương thức vận chuyển mới
-router.post("/", shippingMethodController.createShippingMethod);
+//Tạo mới phương thức vận chuyển – Admin
+router.post("/", verifyToken, requireAdmin, shippingMethodController.createShippingMethod);
 
-// Route: Cập nhật phương thức vận chuyển
-router.put("/:id", shippingMethodController.updateShippingMethod);
+//Cập nhật phương thức vận chuyển – Admin
+router.put("/:id", verifyToken, requireAdmin, shippingMethodController.updateShippingMethod);
 
-// Route: Xóa mềm phương thức vận chuyển
-router.delete("/:id", shippingMethodController.softDeleteShippingMethod);
+//Xóa mềm phương thức vận chuyển – Admin
+router.delete("/:id", verifyToken, requireAdmin, shippingMethodController.softDeleteShippingMethod);
 
-// Khôi phục
-router.put("/restore/:id", shippingMethodController.restoreShippingMethod);
+//Khôi phục – Admin
+router.put("/restore/:id", verifyToken, requireAdmin, shippingMethodController.restoreShippingMethod);
 
-// Route: Xóa phương thức vận chuyển
-router.delete("/delete/:id", shippingMethodController.deleteShippingMethod);
+//Xóa vĩnh viễn – Admin
+router.delete("/delete/:id", verifyToken, requireAdmin, shippingMethodController.deleteShippingMethod);
 
 module.exports = router;

@@ -1,35 +1,39 @@
 const express = require("express");
 const router = express.Router();
 const orderController = require("../controllers/order.controller");
+const { verifyToken, requireAdmin } = require('../middlewares/auth.middleware')
 
-//Route: Thống kê doanh thu 
-router.get("/revenue-stats", orderController.getRevenueStats);
+//Route: Phân quyền Admin – Xem toàn bộ đơn hàng
+router.get('/admin/orders', verifyToken, requireAdmin, orderController.getAllOrders)
 
-// Route: Thống kê số lượng đơn hàng 
-router.get("/order-stats", orderController.getOrderStats);
+//Route: Thống kê doanh thu – Chỉ admin
+router.get("/revenue-stats", verifyToken, requireAdmin, orderController.getRevenueStats)
 
-// Route: Lấy danh sách đơn hàng mới nhất
-router.get("/recent-orders", orderController.getRecentOrders);
+//Route: Thống kê số lượng đơn hàng – Chỉ admin
+router.get("/order-stats", verifyToken, requireAdmin, orderController.getOrderStats)
 
-// Route: Lấy danh sách đơn hàng với phân trang, lọc, và tìm kiếm
-router.get("/", orderController.getOrders);
+//Route: Lấy danh sách đơn hàng mới nhất – Chỉ admin
+router.get("/recent-orders", verifyToken, requireAdmin, orderController.getRecentOrders)
 
-// Route: Lấy chi tiết đơn hàng theo ID
-router.get("/:id", orderController.getOrderById);
+//Route: Lấy danh sách đơn hàng của người dùng (user)
+router.get("/", verifyToken, orderController.getOrders)
 
-// Route: Tạo mới một đơn hàng
-router.post("/", orderController.createOrder);
+//Route: Lấy chi tiết đơn hàng theo ID – phải đăng nhập
+router.get("/:id", verifyToken, orderController.getOrderById)
 
-// Route: Cập nhật thông tin đơn hàng
-router.put("/:id", orderController.updateOrder);
+//Route: Tạo mới một đơn hàng – phải đăng nhập
+router.post("/", verifyToken, orderController.createOrder)
 
-// Route: Xóa mềm đơn hàng
-router.delete("/:id", orderController.softDeleteOrder);
+//Route: Cập nhật thông tin đơn hàng – phải đăng nhập
+router.put("/:id", verifyToken, orderController.updateOrder)
 
-// Route: Khôi phục đơn hàng đã xóa mềm
-router.put("/restore/:id", orderController.restoreOrder);
+//Route: Xóa mềm đơn hàng – phải đăng nhập
+router.delete("/:id", verifyToken, orderController.softDeleteOrder)
 
-// Route: Cập nhật trạng thái vận chuyển
-router.patch("/:id/shipping-status", orderController.updateShippingStatus);
+//Route: Khôi phục đơn hàng đã xóa mềm – phải đăng nhập
+router.put("/restore/:id", verifyToken, orderController.restoreOrder)
+
+//Route: Cập nhật trạng thái vận chuyển – chỉ admin
+router.patch("/:id/shipping-status", verifyToken, requireAdmin, orderController.updateShippingStatus)
 
 module.exports = router;

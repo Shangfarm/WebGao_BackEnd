@@ -1,20 +1,21 @@
 const express = require("express");
 const router = express.Router();
 const reviewController = require("../controllers/review.controller");
+const { verifyToken } = require("../middlewares/auth.middleware");
 
-// Route: Lấy danh sách đánh giá của sản phẩm
+//Lấy danh sách đánh giá của sản phẩm – Public
 router.get("/:productId", reviewController.getReviewsByProduct);
 
-// Route: Thêm đánh giá cho sản phẩm
-router.post("/", reviewController.addReview);
-
-// Route: Xóa mềm đánh giá
-router.delete("/:id", reviewController.softDeleteReview);
-
-// Route: Khôi phục đánh giá đã xóa mềm
-router.put("/restore/:id", reviewController.restoreReview);
-
-// Route: Tính trung bình điểm đánh giá của sản phẩm
+//Tính trung bình điểm đánh giá – Public
 router.get("/:productId/average", reviewController.calculateAverageRating);
+
+//Thêm đánh giá – Phải đăng nhập
+router.post("/", verifyToken, reviewController.addReview);
+
+//Xóa mềm đánh giá – Phải đăng nhập
+router.delete("/:id", verifyToken, reviewController.softDeleteReview);
+
+//Khôi phục đánh giá đã xóa – Phải đăng nhập
+router.put("/restore/:id", verifyToken, reviewController.restoreReview);
 
 module.exports = router;
