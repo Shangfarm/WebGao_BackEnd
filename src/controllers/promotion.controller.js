@@ -86,9 +86,21 @@ const restorePromotion = async (req, res) => {
 // Lấy danh sách chương trình khuyến mãi với phân trang, tìm kiếm và lọc
 const getPromotion = async (req, res) => {
   try {
-    const { page = 1, limit = 10, search = "" } = req.query;
+    const { page = 1, limit = 10, search = "", deleted } = req.query;
     const skip = (page - 1) * limit;
     const filter = { deletedAt: null }; // Chỉ lấy chương trình khuyến mãi chưa bị xóa mềm
+
+
+   // ✅ Thêm lọc theo deleted
+    if (deleted === "true") {
+      filter.deletedAt = { $ne: null };
+    } else if (deleted === "false") {
+      filter.deletedAt = null;
+    } else {
+      // Mặc định là chưa xóa
+      filter.deletedAt = null;
+    }
+
     // Tìm kiếm theo tên chương trình khuyến mãi
     if (search) {
       filter.name = { $regex: search, $options: "i" }; // Không phân biệt hoa thường

@@ -19,7 +19,7 @@ router.put("/:id", verifyToken, requireAdmin, promotionController.updatePromotio
 router.delete("/:id", verifyToken, requireAdmin, promotionController.softDeletePromotion);
 
 //Khôi phục khuyến mãi – chỉ admin
-router.put("/restore/:id", verifyToken, requireAdmin, promotionController.restorePromotion);
+router.patch("/:id/restore", verifyToken, requireAdmin, promotionController.restorePromotion);
 
 //Xóa vĩnh viễn khuyến mãi – chỉ admin
 router.delete("/delete/:id", verifyToken, requireAdmin, promotionController.deletePromotion);

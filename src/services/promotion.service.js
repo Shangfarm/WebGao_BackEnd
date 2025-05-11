@@ -28,12 +28,25 @@ const updatePromotion = async (id, promotionData) => {
 
 // Xóa mềm chương trình khuyến mãi
 const softDeletePromotion = async (id) => {
-  return await Promotion.findByIdAndUpdate(id, { deletedAt: new Date() }, { new: true });
+  return await Promotion.findByIdAndUpdate(
+    id,
+    {
+      deletedAt: new Date(),
+      status: false  // ✅ Tự động tắt trạng thái nếu đang hoạt động
+    },
+    { new: true }
+  );
 };
-
 // Khôi phục chương trình khuyến mãi đã xóa
 const restorePromotion = async (id) => {
-  return await Promotion.findByIdAndUpdate(id, { deletedAt: null }, { new: true });
+  return await Promotion.findByIdAndUpdate(
+    id,
+    {
+      deletedAt: null,
+      status: false  // ✅ Giữ nguyên không hoạt động khi khôi phục
+    },
+    { new: true }
+  );
 };
 // Xóa chương trình khuyến mãi
 const deletePromotion = async (id) => {
