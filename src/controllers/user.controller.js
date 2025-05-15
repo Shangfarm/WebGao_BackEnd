@@ -143,7 +143,7 @@ const getRegistrationStats = async (req, res) => {
 };
 const getMe = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select("-password");
+    const user = await User.findById(req.user.userId).select("-password");
     if (!user) return res.status(404).json({ message: "Không tìm thấy người dùng" });
     res.json(user);
   } catch (error) {
@@ -153,7 +153,7 @@ const getMe = async (req, res) => {
 
 const updateMe = async (req, res) => {
   try {
-    if (!req.user || !req.user.id) {
+    if (!req.user || !req.user.userId) {
       return res.status(401).json({ message: "Không xác thực được người dùng" });
     }
 
@@ -178,7 +178,7 @@ const updateMe = async (req, res) => {
     if (avatar) updateFields.avatar = avatar;
 
     const updated = await User.findByIdAndUpdate(
-      req.user.id,
+      req.user.userId,
       updateFields,
       { new: true, runValidators: true }
     );

@@ -40,11 +40,10 @@ const softDeleteShippingMethod = async (id) => {
 const restoreShippingMethod = async (id) => {
   return await ShippingMethod.findByIdAndUpdate(
     id,
-    { deletedAt: null },
+    { $unset: { deletedAt: "" } },
     { new: true }
   );
 };
-
 
 module.exports = {
   getAllShippingMethods,

@@ -1,6 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
+dotenv.config();//đọc biến môi trường
 const bodyParser = require("body-parser");
 const cors = require("cors");
 
@@ -11,15 +12,14 @@ const userRoutes = require("./routes/user.route");
 const orderRoutes = require("./routes/order.route");
 const couponRoutes = require("./routes/coupon.route");
 const orderItemRoutes = require("./routes/orderItem.route");
-const cartItemRoutes = require("./routes/cartItem.route");
+const cartItemRoutes = require("./routes/cartItem.route");  
 const otpRoutes = require("./routes/otp.route");
 const wishlistRoutes = require("./routes/wishlist.route");
 const reviewRoutes = require("./routes/review.route");
 const shippingMethodRoutes = require("./routes/shippingMethod.route");
 const promotionRoutes = require("./routes/promotion.route");
 const authRoutes = require('./routes/auth.route')
-
-dotenv.config();
+const contactRouter = require('./routes/contact.route'); // Gọi route liên hệ
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -54,6 +54,7 @@ app.use("/api/shipping-methods", shippingMethodRoutes);
 app.use("/api/promotions", promotionRoutes);
 app.use("/api/dashboard", orderRoutes);
 app.use("/api/auth", authRoutes);
+app.use('/api/contact', contactRouter);
 
 // Khởi động server
 app.listen(port, () => {

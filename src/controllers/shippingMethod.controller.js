@@ -102,14 +102,16 @@ const getShippingMethod = async (req, res) => {
   try {
     const { page = 1, limit = 10, search, status } = req.query;
     const skip = (page - 1) * limit;
-    const filter = { deletedAt: null };
+    const filter = {};
+
+    if (status === "deleted") {
+      filter.deletedAt = { $ne: null }; // Lấy bản ghi đã xóa
+    } else {
+      filter.deletedAt = null; // Mặc định: chưa xóa
+    }
 
     if (search) {
       filter.name = { $regex: search, $options: "i" };
-    }
-
-    if (status) {
-      filter.status = status === "true";
     }
 
     const shippingMethods = await ShippingMethod.find(filter)

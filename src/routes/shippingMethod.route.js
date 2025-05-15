@@ -19,7 +19,7 @@ router.put("/:id", verifyToken, requireAdmin, shippingMethodController.updateShi
 router.delete("/:id", verifyToken, requireAdmin, shippingMethodController.softDeleteShippingMethod);
 
 //Khôi phục – Admin
-router.put("/restore/:id", verifyToken, requireAdmin, shippingMethodController.restoreShippingMethod);
+router.patch("/:id/restore", verifyToken, requireAdmin, shippingMethodController.restoreShippingMethod);
 
 //Xóa vĩnh viễn – Admin
 router.delete("/delete/:id", verifyToken, requireAdmin, shippingMethodController.deleteShippingMethod);
