@@ -25,7 +25,24 @@ const createContactService = async (data) => {
     await sendEmail(
       'webgaoviet@gmail.com',
       'Thông báo yêu cầu liên hệ mới',
-      { text: `Có yêu cầu liên hệ mới từ ${data.fullName}. Nội dung: ${data.message}` }
+      {
+        text: `Yêu cầu từ ${data.fullName} - SĐT: ${data.phoneNumber} - Nội dung: ${data.message}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; padding: 20px;">
+            <h2 style="color: #fb811e;">📩 Yêu cầu liên hệ mới từ người dùng</h2>
+            <p><strong>👤 Họ tên:</strong> ${data.fullName}</p>
+            <p><strong>📧 Email:</strong> ${data.email}</p>
+            <p><strong>📞 Số điện thoại:</strong> ${data.phoneNumber}</p>
+            <p><strong>📝 Nội dung:</strong></p>
+              <div style="margin-left: 12px; margin-bottom: 8px; white-space: pre-line;">
+                ${data.message}
+              </div>
+            <p><strong>⏰ Thời gian gửi:</strong> ${new Date().toLocaleString('vi-VN')}</p>
+            <hr/>
+            <p style="font-size: 12px; color: #999;">Email này được gửi tự động từ hệ thống FamRice.</p>
+          </div>
+        `
+      }
     );
 
     // Gửi email phản hồi cho người dùng (HTML format)
