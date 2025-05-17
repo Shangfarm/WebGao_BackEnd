@@ -19,7 +19,8 @@ const reviewRoutes = require("./routes/review.route");
 const shippingMethodRoutes = require("./routes/shippingMethod.route");
 const promotionRoutes = require("./routes/promotion.route");
 const authRoutes = require('./routes/auth.route')
-const contactRouter = require('./routes/contact.route'); // Gọi route liên hệ
+const contactRouter = require('./routes/contact.route'); 
+const newsletterRoutes = require('./routes/newsletter.routes');
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -55,6 +56,7 @@ app.use("/api/promotions", promotionRoutes);
 app.use("/api/dashboard", orderRoutes);
 app.use("/api/auth", authRoutes);
 app.use('/api/contact', contactRouter);
+app.use('/api/newsletter', newsletterRoutes);
 
 // Khởi động server
 app.listen(port, () => {
