@@ -36,7 +36,11 @@ const UserSchema = new mongoose.Schema({
   createdById: { type: String },
   updatedAt: { type: Date },
   updatedById: { type: String },
-  deletedAt: { type: Date } // Trường để đánh dấu đã xóa
+  deletedAt: { type: Date }, // Trường để đánh dấu đã xóa
+  resetPasswordToken: { type: String },
+  resetPasswordExpires: { type: Date }
+
+  
 });
 
 UserSchema.pre("save", function (next) {
