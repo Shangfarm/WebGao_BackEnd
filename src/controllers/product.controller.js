@@ -81,8 +81,16 @@ const deleteProduct = async (req, res) => {
 const getProducts = async (req, res) => {
   try {
     const { page = 1, limit = 10, search, status, categoryId, minPrice, maxPrice, inStock } = req.query;
+    const showDeleted = req.query.showDeleted;
     const skip = (page - 1) * limit;
-    const filter = { deletedAt: null }; // Chỉ lấy sản phẩm chưa bị xóa mềm
+    const filter = {};
+
+    if (showDeleted === "true") {
+      filter.deletedAt = { $ne: null }; // Lấy sản phẩm đã xoá
+    } else {
+      filter.deletedAt = null; // Mặc định: chỉ lấy sản phẩm chưa xoá
+    }
+
 
     // Tìm kiếm theo tên sản phẩm
     if (search) {
@@ -147,6 +155,8 @@ const softDeleteProduct = async (req, res) => {
     }
 
     product.deletedAt = new Date();
+    product.status = false; // 👉 Chuyển trạng thái sang ẩn
+    
     await product.save();
 
     res.status(200).json({ message: "Sản phẩm đã được xóa mềm", data: product });
@@ -169,6 +179,19 @@ const restoreProduct = async (req, res) => {
     await product.save();
 
     res.status(200).json({ message: "Sản phẩm đã được khôi phục", data: product });
+  } catch (error) {
+    res.status(500).json({ message: "Đã xảy ra lỗi", error: error.message });
+  }
+};
+
+// Xoá vĩnh viễn sản phẩm
+const forceDeleteProduct = async (req, res) => {
+  try {
+    const product = await Product.findByIdAndDelete(req.params.id);
+    if (!product) {
+      return res.status(404).json({ message: "Không tìm thấy sản phẩm" });
+    }
+    res.status(200).json({ message: "Sản phẩm đã bị xoá vĩnh viễn", data: product });
   } catch (error) {
     res.status(500).json({ message: "Đã xảy ra lỗi", error: error.message });
   }
@@ -220,6 +243,7 @@ module.exports = {
   getProducts,
   softDeleteProduct,
   restoreProduct,
+  forceDeleteProduct,
   getStockStatus,
   getProductCountByCategory,
 };

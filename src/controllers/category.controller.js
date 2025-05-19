@@ -69,7 +69,11 @@ const softDeleteCategory = async (req, res) => {
       return res.status(404).json({ message: "Không tìm thấy danh mục" });
     }
 
-    await category.softDelete();
+    // ✅ Ẩn danh mục khi xoá mềm
+    category.status = false;
+    await category.softDelete(); // softDelete vẫn giữ deletedAt = Date
+    await category.save();  
+
     res.status(200).json({ message: "Danh mục đã được xóa mềm", data: category });
   } catch (error) {
     res.status(500).json({ message: "Đã xảy ra lỗi", error: error.message });
@@ -89,6 +93,7 @@ const restoreCategory = async (req, res) => {
 
     // Đặt lại deletedAt thành null
     category.deletedAt = null;
+    category.status = false;
     await category.save();
 
     res.status(200).json({ message: "Danh mục đã được khôi phục", data: category });
@@ -117,8 +122,16 @@ const deleteCategory = async (req, res) => {
 const getCategories = async (req, res) => {
   try {
     const { page = 1, limit = 10, search, status } = req.query;
+    const showDeleted = req.query.showDeleted;
     const skip = (page - 1) * limit;
-    const filter = { deletedAt: null };
+    const filter = {};
+
+    // ✅ Bổ sung xử lý lọc theo đã xoá hay chưa
+    if (showDeleted === "true") {
+      filter.deletedAt = { $ne: null }; // lấy những cái đã bị xoá mềm
+    } else {
+      filter.deletedAt = null; // mặc định chỉ lấy danh mục chưa xoá
+    }
 
     if (search) {
       filter.name = { $regex: search, $options: "i" };
@@ -145,6 +158,7 @@ const getCategories = async (req, res) => {
       },
     });
   } catch (error) {
+    console.error("Lỗi khi lấy danh mục:", error); // <== nên thêm log này để debug backend
     res.status(500).json({ message: "Đã xảy ra lỗi", error: error.message });
   }
 };

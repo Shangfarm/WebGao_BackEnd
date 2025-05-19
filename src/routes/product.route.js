@@ -27,4 +27,8 @@ router.delete("/:id", verifyToken, requireAdmin, productController.softDeletePro
 //Khôi phục sản phẩm đã xóa mềm – Chỉ admin
 router.put("/restore/:id", verifyToken, requireAdmin, productController.restoreProduct);
 
+// Xoá vĩnh viễn sản phẩm – Chỉ admin
+router.delete("/delete/:id", verifyToken, requireAdmin, productController.forceDeleteProduct);
+
+
 module.exports = router;
