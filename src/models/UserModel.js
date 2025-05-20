@@ -19,7 +19,7 @@ const UserSchema = new mongoose.Schema({
   },
   avatar: { 
     type: String, 
-    default: 'https://example.com/default-avatar.png' 
+    default: 'https://cdn.kona-blue.com/upload/kona-blue_com/post/images/2024/09/19/465/avatar-trang-1.jpg' 
   },
   loyaltyPoints: { type: Number, default: 0 },
   role: { 

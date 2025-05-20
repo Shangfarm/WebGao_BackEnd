@@ -2,7 +2,9 @@ const Wishlist = require("../models/WishlistModel");
 
 // Lấy danh sách yêu thích của người dùng
 const getWishlist = async (userId) => {
-  return await Wishlist.find({ userId });
+  return await Wishlist.find({ userId })
+    .populate("productId") // 💥 lấy đủ thông tin sản phẩm
+    .sort({ createdAt: -1 });
 };
 
 // Thêm sản phẩm vào danh sách yêu thích
@@ -16,19 +18,13 @@ const addToWishlist = async (userId, productId) => {
   return await wishlistItem.save();
 };
 
-// Xóa mềm sản phẩm khỏi danh sách yêu thích
-const softDeleteWishlistItem = async (id) => {
-  return await Wishlist.findByIdAndUpdate(id, { deletedAt: new Date() });
-};
-
-// Khôi phục sản phẩm đã xóa mềm
-const restoreWishlistItem = async (id) => {
-  return await Wishlist.findByIdAndUpdate(id, { deletedAt: null });
+// ✅ Xóa vĩnh viễn sản phẩm khỏi danh sách yêu thích
+const deleteWishlistItem = async (id) => {
+  return await Wishlist.findByIdAndDelete(id);
 };
 
 module.exports = {
   getWishlist,
   addToWishlist,
-  softDeleteWishlistItem,
-  restoreWishlistItem,
+  deleteWishlistItem
 };

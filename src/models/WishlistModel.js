@@ -6,6 +6,7 @@ const WishlistSchema = new mongoose.Schema({
     ref: 'User', 
     required: true 
   }, // Người dùng
+
   productId: { 
     type: mongoose.Schema.Types.ObjectId, 
     ref: 'Product', 
@@ -15,29 +16,19 @@ const WishlistSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
   createdById: { type: String },
   updatedAt: { type: Date, default: Date.now },
-  updatedById: { type: String },
-  deletedAt: { type: Date, default: null } // Xóa mềm
+  updatedById: { type: String }
 });
 
-// Đảm bảo không trùng sản phẩm trong wishlist của cùng một người dùng
+// ✅ Đảm bảo không trùng sản phẩm trong wishlist của cùng một người dùng
 WishlistSchema.index({ userId: 1, productId: 1 }, { unique: true });
 
-// Middleware: Tự động cập nhật updatedAt
+// ✅ Middleware: Tự động cập nhật updatedAt
 WishlistSchema.pre('save', function (next) {
   this.updatedAt = Date.now();
   next();
 });
 
-// Middleware: Chỉ lấy các mục chưa bị xóa
-WishlistSchema.pre('find', function () {
-  this.where({ deletedAt: null });
-});
-
-WishlistSchema.pre('findOne', function () {
-  this.where({ deletedAt: null });
-});
-
-// Middleware: Kiểm tra dữ liệu trước khi lưu
+// ✅ Middleware: Kiểm tra dữ liệu trước khi lưu
 WishlistSchema.pre('save', async function (next) {
   if (!this.userId || !this.productId) {
     throw new Error('userId và productId là bắt buộc');

@@ -27,23 +27,12 @@ const addToWishlist = async (req, res) => {
   }
 };
 
-// Xóa mềm sản phẩm khỏi danh sách yêu thích
-const softDeleteWishlistItem = async (req, res) => {
+// ✅ Xóa vĩnh viễn sản phẩm khỏi danh sách yêu thích
+const deleteWishlistItem = async (req, res) => {
   try {
     const { id } = req.params;
-    await wishlistService.softDeleteWishlistItem(id);
+    await wishlistService.deleteWishlistItem(id);
     res.status(200).json({ message: "Đã xóa sản phẩm khỏi danh sách yêu thích" });
-  } catch (error) {
-    res.status(500).json({ message: "Đã xảy ra lỗi", error: error.message });
-  }
-};
-
-// Khôi phục sản phẩm đã xóa mềm
-const restoreWishlistItem = async (req, res) => {
-  try {
-    const { id } = req.params;
-    await wishlistService.restoreWishlistItem(id);
-    res.status(200).json({ message: "Đã khôi phục sản phẩm trong danh sách yêu thích" });
   } catch (error) {
     res.status(500).json({ message: "Đã xảy ra lỗi", error: error.message });
   }
@@ -52,6 +41,5 @@ const restoreWishlistItem = async (req, res) => {
 module.exports = {
   getWishlist,
   addToWishlist,
-  softDeleteWishlistItem,
-  restoreWishlistItem,
+  deleteWishlistItem
 };

@@ -12,10 +12,13 @@ router.get("/:productId/average", reviewController.calculateAverageRating);
 //Thêm đánh giá – Phải đăng nhập
 router.post("/", verifyToken, reviewController.addReview);
 
-//Xóa mềm đánh giá – Phải đăng nhập
-router.delete("/:id", verifyToken, reviewController.softDeleteReview);
+//Xóa đánh giá – Phải đăng nhập
+router.delete("/:id", verifyToken, reviewController.deleteReview);
 
-//Khôi phục đánh giá đã xóa – Phải đăng nhập
-router.put("/restore/:id", verifyToken, reviewController.restoreReview);
+//Sửa đánh giá – Phải đăng nhập
+router.put("/:id", verifyToken, reviewController.editReview);
+
+//Trả lời đánh giá – Phải đăng nhập
+router.post("/:reviewId/reply", verifyToken, reviewController.replyToReview);
 
 module.exports = router;

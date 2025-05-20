@@ -22,10 +22,16 @@ const ReviewSchema = new mongoose.Schema({
   }, // Bình luận (tuỳ chọn)
 
   createdAt: { type: Date, default: Date.now },
-  createdById: { type: String },
   updatedAt: { type: Date },
+  createdById: { type: String },
   updatedById: { type: String },
-  deletedAt: { type: Date, default: null } // Xóa mềm
+  replies: [
+    {
+      userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+      comment: { type: String, required: true },
+      createdAt: { type: Date, default: Date.now }
+    }
+  ]
 });
 
 // Đảm bảo không trùng lặp đánh giá của cùng một người dùng cho một sản phẩm
@@ -49,12 +55,10 @@ ReviewSchema.pre('findOne', function () {
 // Phương thức tĩnh: Tính trung bình điểm đánh giá của sản phẩm
 ReviewSchema.statics.calculateAverageRating = async function (productId) {
   const ObjectId = mongoose.Types.ObjectId;
-
   const result = await this.aggregate([
-    { $match: { productId: new ObjectId(productId), deletedAt: null } }, // Sử dụng `new ObjectId`
+    { $match: { productId: new ObjectId(productId) } },
     { $group: { _id: "$productId", averageRating: { $avg: "$rating" } } }
   ]);
-
   return result.length > 0 ? result[0].averageRating : 0;
 };
 

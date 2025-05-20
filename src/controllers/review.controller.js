@@ -1,6 +1,7 @@
 const reviewService = require("../services/review.service");
 const User = require("../models/UserModel");
 const Product = require("../models/ProductModel");
+const Review = require("../models/ReviewModel");
 
 // Lấy danh sách đánh giá của sản phẩm
 const getReviewsByProduct = async (req, res) => {
@@ -47,23 +48,33 @@ const addReview = async (req, res) => {
   }
 };
 
-// Xóa mềm đánh giá
-const softDeleteReview = async (req, res) => {
+// Xóa đánh giá
+const deleteReview = async (req, res) => {
   try {
     const { id } = req.params;
-    await reviewService.softDeleteReview(id);
-    res.status(200).json({ message: "Đánh giá đã được xóa" });
+    await reviewService.deleteReview(id);
+    res.status(200).json({ message: "Đánh giá đã được xóa vĩnh viễn" });
   } catch (error) {
     res.status(500).json({ message: "Đã xảy ra lỗi", error: error.message });
   }
 };
 
-// Khôi phục đánh giá đã xóa
-const restoreReview = async (req, res) => {
+// Sửa đánh giá đã xóa
+const editReview = async (req, res) => {
   try {
     const { id } = req.params;
-    await reviewService.restoreReview(id);
-    res.status(200).json({ message: "Đánh giá đã được khôi phục" });
+    const { rating, comment } = req.body;
+
+    if (!rating && !comment) {
+      return res.status(400).json({ message: "Không có dữ liệu để cập nhật" });
+    }
+
+    const updatedReview = await reviewService.editReview(id, rating, comment);
+    if (!updatedReview) {
+      return res.status(404).json({ message: "Đánh giá không tồn tại" });
+    }
+
+    res.status(200).json({ message: "Cập nhật đánh giá thành công", data: updatedReview });
   } catch (error) {
     res.status(500).json({ message: "Đã xảy ra lỗi", error: error.message });
   }
@@ -80,10 +91,39 @@ const calculateAverageRating = async (req, res) => {
   }
 };
 
+//Trả lời đánh giá
+const replyToReview = async (req, res) => {
+  try {
+    const { reviewId } = req.params;
+    const { userId, comment } = req.body;
+
+    if (!userId || !comment) {
+      return res.status(400).json({ message: "Thiếu thông tin trả lời" });
+    }
+
+    const review = await Review.findById(reviewId);
+    if (!review) {
+      return res.status(404).json({ message: "Đánh giá không tồn tại" });
+    }
+
+    review.replies.push({
+      userId,
+      comment
+    });
+
+    await review.save();
+
+    res.status(200).json({ message: "Trả lời thành công", data: review.replies });
+  } catch (error) {
+    res.status(500).json({ message: "Lỗi server", error: error.message });
+  }
+};
+
 module.exports = {
   getReviewsByProduct,
   addReview,
-  softDeleteReview,
-  restoreReview,
+  deleteReview,
+  editReview,
   calculateAverageRating,
+  replyToReview,
 };

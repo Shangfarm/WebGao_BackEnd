@@ -1,54 +1,55 @@
-const reviewService = require("../services/review.service");
 const Review = require("../models/ReviewModel");
 
-// Lấy danh sách đánh giá của sản phẩm
 const getReviewsByProduct = async (productId, isAdmin = false) => {
   const reviews = await Review.find({ productId })
-    .populate({
-      path: "userId",
-      select: "username",
-      options: { lean: true }
-    });
+    .populate("userId", "username avatar")                    // người viết đánh giá
+    .populate("replies.userId", "username avatar")            // người trả lời đánh giá
+    .lean(); // dùng lean để xử lý nhanh
 
-  // Xử lý trường hợp userId không tồn tại hoặc populate thất bại
-  const processedReviews = reviews.map((review) => {
-    // Clone review object để tránh thay đổi dữ liệu gốc
-    const reviewData = review.toObject ? review.toObject() : { ...review._doc };
-    
-   // Hàm ẩn tên bằng dấu * ngẫu nhiên
+  // Hàm ẩn tên
   const maskWithRandomStars = (name) => {
     if (!name || typeof name !== 'string') return "Ẩn danh";
-    
     return name
       .split(' ')
       .map(word => {
-        // Giữ lại 1-2 ký tự đầu tùy độ dài
         const keepChars = word.length <= 3 ? 1 : 2;
-        const visiblePart = word.slice(0, keepChars);
-        
-        // Thay phần còn lại hoàn toàn bằng dấu *
         const maskedPart = '*'.repeat(Math.max(0, word.length - keepChars));
-        
-        return visiblePart + maskedPart;
+        return word.slice(0, keepChars) + maskedPart;
       })
       .join(' ');
   };
 
-  let userData = { username: "Ẩn danh" };
-  if (review.userId?.username) {
-    userData = {
-      ...review.userId,
-      username: isAdmin ? review.userId.username : maskWithRandomStars(review.userId.username)
+  // Xử lý che tên nếu không phải admin
+  const processedReviews = reviews.map((review) => {
+    const maskedUser = review.userId
+      ? {
+          ...review.userId,
+          username: isAdmin ? review.userId.username : maskWithRandomStars(review.userId.username),
+        }
+      : { username: "Ẩn danh" };
+
+    const replies = (review.replies || []).map((reply) => {
+      const replyUser = reply.userId
+        ? {
+            ...reply.userId,
+            username: isAdmin ? reply.userId.username : maskWithRandomStars(reply.userId.username),
+          }
+        : { username: "Ẩn danh" };
+
+      return {
+        ...reply,
+        userId: replyUser
+      };
+    });
+
+    return {
+      ...review,
+      userId: maskedUser,
+      replies
     };
-  }
+  });
 
-  return {
-    ...reviewData,
-    userId: userData
-  };
-});
-
-return processedReviews;
+  return processedReviews;
 };
 
 // Thêm đánh giá cho sản phẩm
@@ -62,14 +63,18 @@ const addReview = async (userId, productId, rating, comment) => {
   return await review.save();
 };
 
-// Xóa mềm đánh giá
-const softDeleteReview = async (id) => {
-  return await Review.findByIdAndUpdate(id, { deletedAt: new Date() });
+// Xóa đánh giá
+const deleteReview = async (id) => {
+  return await Review.findByIdAndDelete(id);
 };
+// Sửa đánh giá
+const editReview = async (id, rating, comment) => {
+  const updateData = {};
+  if (rating !== undefined) updateData.rating = rating;
+  if (comment !== undefined) updateData.comment = comment;
+  updateData.updatedAt = new Date();
 
-// Khôi phục đánh giá đã xóa
-const restoreReview = async (id) => {
-  return await Review.findByIdAndUpdate(id, { deletedAt: null });
+  return await Review.findByIdAndUpdate(id, updateData, { new: true });
 };
 
 // Tính trung bình điểm đánh giá của sản phẩm
@@ -80,7 +85,7 @@ const calculateAverageRating = async (productId) => {
 module.exports = {
   getReviewsByProduct,
   addReview,
-  softDeleteReview,
-  restoreReview,
-  calculateAverageRating,
+  deleteReview,
+  editReview,
+  calculateAverageRating
 };
