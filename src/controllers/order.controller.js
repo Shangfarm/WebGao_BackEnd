@@ -24,6 +24,7 @@ const getOrderById = async (req, res) => {
     const order = await Order.findById(req.params.id)
       .populate("userId", "username email")
       .populate("couponId", "code discountType discountValue")
+      .populate("promotionId", "name discountType discountValue")
       .populate("shippingMethodId", "name price estimatedDeliveryTime")
       .populate("items.productId", "name price");
 
@@ -62,72 +63,37 @@ const createOrder = async (req, res) => {
       return res.status(400).json({ message: "Giỏ hàng trống" });
     }
 
-    // Thêm kiểm tra trạng thái sản phẩm (status phải true)
+    // Kiểm tra trạng thái sản phẩm
     const inactiveProducts = cartItems.filter(item => !item.productId.status);
     if (inactiveProducts.length > 0) {
       const productNames = inactiveProducts.map(item => item.productId.name).join(", ");
       return res.status(400).json({ message: `Các sản phẩm sau đã ngừng bán: ${productNames}` });
     }
 
-    // Áp dụng khuyến mãi cho từng sản phẩm
-    const updatedCartItems = await Promise.all(
-      cartItems.map(async (item) => {
-        // Tính tổng tiền gốc
-        item.totalPrice = item.quantity * item.productId.price;
+    // Tính tổng tiền giỏ hàng trước khi giảm giá
+    const cartTotal = cartItems.reduce((sum, item) => {
+      return sum + (item.productId.price * item.quantity);
+    }, 0);
 
-        // Áp dụng khuyến mãi sản phẩm (nếu có)
-        const productPromotion = await Promotion.findOne({
-          applicableProducts: item.productId._id,
-          status: true,
-          startDate: { $lte: new Date() },
-          endDate: { $gte: new Date() },
-        });
+    // Áp dụng khuyến mãi toàn giỏ
+    const { totalAfterDiscount, appliedPromotion } = await promotionService.applyAutoPromotion(cartTotal);
+    let totalAmount = totalAfterDiscount;
 
-        if (productPromotion && productPromotion.discountType === "percentage") {
-          item.totalPrice -= item.totalPrice * (productPromotion.discountValue / 100);
-        }
-
-        return item;
-      })
-    );
-
-    // Tính tổng tiền sản phẩm sau khuyến mãi
-    let totalAmount = updatedCartItems.reduce((sum, item) => sum + item.totalPrice, 0);
-
-    // Kiểm tra và áp dụng mã giảm giá tổng đơn hàng (nếu có)
+    // Áp dụng mã giảm giá nếu có
     if (couponId) {
       const coupon = await Coupon.findById(couponId);
-      if (!coupon) {
-        return res.status(400).json({ message: "Mã giảm giá không hợp lệ" });
-      }
-    
-    
-    // Kiểm tra trạng thái của mã giảm giá
-    if (!coupon.status) {
-      return res.status(400).json({ message: "Mã giảm giá đã bị khóa và không thể sử dụng" });
-    }
+      if (!coupon) return res.status(400).json({ message: "Mã giảm giá không hợp lệ" });
+      if (!coupon.status) return res.status(400).json({ message: "Mã giảm giá đã bị khóa" });
+      if (new Date(coupon.expiryDate) < new Date()) return res.status(400).json({ message: "Mã giảm giá đã hết hạn" });
+      if (coupon.quantity <= 0) return res.status(400).json({ message: "Mã giảm giá đã hết lượt sử dụng" });
 
-      // Kiểm tra ngày hết hạn của mã giảm giá
-      if (new Date(coupon.expiryDate) < new Date()) {
-        return res.status(400).json({ message: "Mã giảm giá đã hết hạn" });
-      }
-
-      // Kiểm tra số lượng mã giảm giá còn lại
-      if (coupon.quantity <= 0) {
-        return res.status(400).json({ message: "Mã giảm giá đã được sử dụng hết" });
-      }
-
-      // Áp dụng giảm giá tổng đơn hàng
       if (coupon.discountType === "percentage") {
         totalAmount -= totalAmount * (coupon.discountValue / 100);
       } else if (coupon.discountType === "fixed") {
         totalAmount -= coupon.discountValue;
       }
 
-      // Đảm bảo tổng tiền không âm
       totalAmount = Math.max(totalAmount, 0);
-
-      // Giảm số lượng mã giảm giá
       coupon.quantity -= 1;
       await coupon.save();
     }
@@ -139,7 +105,7 @@ const createOrder = async (req, res) => {
     }
     const shippingFee = shippingMethod.price;
 
-    // Cộng phí vận chuyển vào tổng tiền
+    // Cộng phí vận chuyển
     totalAmount += shippingFee;
 
     // Tạo đơn hàng
@@ -149,15 +115,16 @@ const createOrder = async (req, res) => {
       shippingAddress,
       shippingMethodId,
       paymentMethod,
-      couponId, // Lưu mã giảm giá vào đơn hàng
-      totalAmount, // Tổng tiền sản phẩm sau giảm giá và phí vận chuyển
-      orderStatus: "PENDING", // Trạng thái mặc định
+      couponId: couponId || null,
+      promotionId: appliedPromotion?._id || null, 
+      totalAmount,
+      orderStatus: "PENDING",
     });
 
     await newOrder.save();
 
-    // Chuyển sản phẩm từ giỏ hàng sang bảng OrderItem
-    const orderItems = updatedCartItems.map((item) => ({
+    // Tạo OrderItem từ giỏ hàng
+    const orderItems = cartItems.map((item) => ({
       orderId: newOrder._id,
       productId: item.productId._id,
       quantity: item.quantity,
@@ -166,17 +133,17 @@ const createOrder = async (req, res) => {
 
     await OrderItem.insertMany(orderItems);
 
-    // Trừ tồn kho của sản phẩm
-    for (const item of updatedCartItems) {
-    const product = item.productId;
-    if (product.stock < item.quantity) {
-      return res.status(400).json({ message: `Sản phẩm ${product.name} không đủ hàng trong kho` });
-    }
-    product.stock -= item.quantity;
-    await product.save();
+    // Trừ tồn kho
+    for (const item of cartItems) {
+      const product = item.productId;
+      if (product.stock < item.quantity) {
+        return res.status(400).json({ message: `Sản phẩm ${product.name} không đủ hàng trong kho` });
+      }
+      product.stock -= item.quantity;
+      await product.save();
     }
 
-    // Xóa giỏ hàng sau khi đặt hàng
+    // Xóa giỏ hàng
     await CartItem.deleteMany({ userId });
 
     res.status(201).json({ message: "Đơn hàng đã được tạo thành công", data: newOrder });

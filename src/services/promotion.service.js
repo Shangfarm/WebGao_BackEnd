@@ -53,51 +53,40 @@ const deletePromotion = async (id) => {
   return await Promotion.findByIdAndDelete(id);
 };
 
-const applyPromotionToCartItems = async (cartItems) => {
+const applyAutoPromotion = async (cartTotal) => {
   const promotions = await Promotion.find({
     status: true,
     startDate: { $lte: new Date() },
     endDate: { $gte: new Date() },
+    deletedAt: null
   });
 
-  // Tạo Map để tra cứu nhanh hơn
-  const productPromotions = new Map();
-  const categoryPromotions = new Map();
+  // Nếu không có khuyến mãi nào, trả lại giá trị gốc
+  if (promotions.length === 0) {
+    return {
+      totalAfterDiscount: cartTotal,
+      appliedPromotion: null
+    };
+  }
 
-  promotions.forEach((promo) => {
-    promo.applicableProducts.forEach((productId) => {
-      if (!productPromotions.has(productId.toString())) {
-        productPromotions.set(productId.toString(), []);
-      }
-      productPromotions.get(productId.toString()).push(promo);
-    });
+  // Giả sử chỉ áp dụng khuyến mãi đầu tiên tìm thấy (ưu tiên cao nhất)
+  const promotion = promotions[0];
+  let totalAfterDiscount = cartTotal;
 
-    promo.applicableCategories.forEach((categoryId) => {
-      if (!categoryPromotions.has(categoryId.toString())) {
-        categoryPromotions.set(categoryId.toString(), []);
-      }
-      categoryPromotions.get(categoryId.toString()).push(promo);
-    });
-  });
+  if (promotion.discountType === "percentage") {
+    totalAfterDiscount -= (cartTotal * promotion.discountValue) / 100;
+  } else if (promotion.discountType === "fixed") {
+    totalAfterDiscount -= promotion.discountValue;
+  }
 
-  // Áp dụng khuyến mãi cho từng sản phẩm
-  cartItems.forEach((item) => {
-    const productPromos = productPromotions.get(item.productId._id.toString()) || [];
-    const categoryPromos = categoryPromotions.get(item.productId.categoryId?.toString()) || [];
-    const applicablePromos = [...productPromos, ...categoryPromos];
+  totalAfterDiscount = Math.max(totalAfterDiscount, 0);
 
-    applicablePromos.forEach((promo) => {
-      if (promo.discountType === "percentage") {
-        item.totalPrice -= (item.totalPrice * promo.discountValue) / 100;
-      } else if (promo.discountType === "fixed") {
-        item.totalPrice -= promo.discountValue;
-      }
-      item.totalPrice = Math.max(item.totalPrice, 0);
-    });
-  });
-
-  return cartItems;
+  return {
+    totalAfterDiscount,
+    appliedPromotion: promotion
+  };
 };
+
 
 // Thêm vào promotion.service.js
 const getPromotionsWithPagination = async (filter = {}, skip = 0, limit = 10) => {
@@ -117,6 +106,6 @@ module.exports = {
   softDeletePromotion,
   deletePromotion,
   restorePromotion,
-  applyPromotionToCartItems,
+  applyAutoPromotion,
   getPromotionsWithPagination
 };

@@ -9,9 +9,16 @@ const getAllCartItems = async (req, res) => {
     const cartItems = await cartItemService.getAllCartItems(userId);
 
     // Áp dụng khuyến mãi cho giỏ hàng
-    const updatedCartItems = await promotionService.applyPromotionToCartItems(cartItems);
+    const cartTotal = cartItems.reduce((sum, item) => sum + item.totalPrice, 0);
+    const { totalAfterDiscount, appliedPromotion } = await promotionService.applyAutoPromotion(cartTotal);
 
-    res.status(200).json({ message: "Danh sách sản phẩm trong giỏ hàng", data: updatedCartItems });
+    res.status(200).json({
+      message: "Danh sách sản phẩm trong giỏ hàng",
+      data: cartItems,
+      cartTotal,
+      totalAfterDiscount,
+      appliedPromotion
+    });
   } catch (error) {
     res.status(500).json({ message: "Đã xảy ra lỗi", error: error.message });
   }
@@ -65,9 +72,17 @@ const addCartItem = async (req, res) => {
     const cartItems = await cartItemService.getAllCartItems(userId);
 
     // Áp dụng khuyến mãi
-    const updatedCartItems = await promotionService.applyPromotionToCartItems(cartItems);
+    const cartTotal = cartItems.reduce((sum, item) => sum + item.totalPrice, 0);
+    const { totalAfterDiscount, appliedPromotion } = await promotionService.applyAutoPromotion(cartTotal);
 
-    res.status(200).json({ message: "Danh sách sản phẩm trong giỏ hàng", data: updatedCartItems });
+    res.status(200).json({
+      message: "Danh sách sản phẩm trong giỏ hàng",
+      data: cartItems,
+      cartTotal,
+      totalAfterDiscount,
+      appliedPromotion
+    });
+
   } catch (error) {
     res.status(500).json({ message: "Đã xảy ra lỗi", error: error.message });
   }
@@ -106,14 +121,9 @@ const calculateCartTotal = async (req, res) => {
   try {
     const { userId } = req.params;
     const cartItems = await cartItemService.getAllCartItems(userId);
-
-    // Áp dụng khuyến mãi
-    const updatedCartItems = await promotionService.applyPromotionToCartItems(cartItems);
-
-    // Tính tổng giá trị giỏ hàng
-    const total = updatedCartItems.reduce((sum, item) => sum + item.totalPrice, 0);
-
-    res.json({ total });
+    const cartTotal = cartItems.reduce((sum, item) => sum + item.totalPrice, 0);
+    const { totalAfterDiscount, appliedPromotion } = await promotionService.applyAutoPromotion(cartTotal);
+    res.json({ cartTotal, totalAfterDiscount, appliedPromotion });
   } catch (error) {
     res.status(500).json({ message: "Đã xảy ra lỗi", error: error.message });
   }

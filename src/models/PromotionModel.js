@@ -5,8 +5,6 @@ const PromotionSchema = new mongoose.Schema({
   description: { type: String }, // Mô tả chương trình khuyến mãi
   discountType: { type: String, enum: ["percentage", "fixed"], required: true }, // Loại giảm giá (phần trăm hoặc cố định)
   discountValue: { type: Number, required: true }, // Giá trị giảm giá
-  applicableProducts: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }], // Sản phẩm áp dụng
-  applicableCategories: [{ type: mongoose.Schema.Types.ObjectId, ref: "Category" }], // Danh mục áp dụng
   startDate: { type: Date, required: true }, // Ngày bắt đầu
   endDate: { type: Date, required: true }, // Ngày kết thúc
   status: { type: Boolean, default: true }, // Trạng thái (còn hiệu lực hay không)
