@@ -2,6 +2,7 @@ const Order = require("../models/OrderModel");
 const OrderItem = require("../models/OrderItemModel");
 const Coupon = require("../models/CouponModel");
 const ShippingMethod = require("../models/ShippingMethodModel");
+const { applyAutoPromotion } = require("./promotion.service");
 
 // Lấy tất cả đơn hàng
 const getAllOrders = async () => {
@@ -77,6 +78,15 @@ const calculateTotalAmount = async (orderId, couponId) => {
   }, 0);
 
   let totalAmount = totalItemAmount;
+let appliedPromotion = null;
+
+// Áp dụng tự động chương trình khuyến mãi nếu không dùng coupon
+if (!couponId) {
+  const promotionResult = await applyAutoPromotion(totalItemAmount);
+  totalAmount = promotionResult.totalAfterDiscount;
+  appliedPromotion = promotionResult.appliedPromotion;
+}
+
 
   // Áp dụng mã giảm giá nếu có
   if (couponId) {
@@ -109,7 +119,7 @@ const calculateTotalAmount = async (orderId, couponId) => {
     await coupon.save();
   }
 
-  return totalAmount;
+  return { totalAmount, appliedPromotion };
 };
 
 // Kiểm tra trạng thái sản phẩm trong giỏ hàng
