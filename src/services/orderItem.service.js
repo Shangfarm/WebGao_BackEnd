@@ -41,11 +41,6 @@ const getTopSellingProducts = async () => {
     },
     { $unwind: "$order" },
     {
-      $match: {
-        "order.orderStatus": { $ne: "CANCELLED" }
-      }
-    },
-    {
       $group: {
         _id: "$productId",
         totalQuantity: { $sum: "$quantity" }
@@ -72,9 +67,14 @@ const getTopSellingProducts = async () => {
       }
     }
   ]);
-  return topProducts;
-};
 
+  const totalSales = topProducts.reduce((sum, p) => sum + p.totalQuantity, 0);
+
+  return {
+    totalSales,
+    data: topProducts
+  };
+};
 
 // Cập nhật số lượng sản phẩm bán ra khi đơn hàng bị hủy
 const revertSoldQuantityOnCancel = async (orderId) => {

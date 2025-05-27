@@ -67,8 +67,8 @@ const deleteOrderItem = async (req, res) => {
 // Thống kê sản phẩm bán chạy 
 const getTopSellingProducts = async (req, res) => {
   try {
-    const topProducts = await orderItemService.getTopSellingProducts();
-    res.status(200).json({ message: "Sản phẩm bán chạy", data: topProducts });
+    const result = await orderItemService.getTopSellingProducts();
+    res.status(200).json(result); // ✅ Không gói thêm message
   } catch (error) {
     res.status(500).json({ message: "Đã xảy ra lỗi", error: error.message });
   }
