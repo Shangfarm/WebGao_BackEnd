@@ -344,7 +344,7 @@ const updateShippingStatus = async (req, res) => {
 
 const getOrders = async (req, res) => {
   try {
-    const { page = 1, limit = 10, status, search } = req.query;
+    const { page = 1, limit = 0, status, search } = req.query;
     const skip = (page - 1) * limit;
 
     // Lọc theo trạng thái xóa mềm
