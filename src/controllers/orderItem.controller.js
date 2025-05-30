@@ -73,6 +73,15 @@ const getTopSellingProducts = async (req, res) => {
     res.status(500).json({ message: "Đã xảy ra lỗi", error: error.message });
   }
 };
+// Lấy tổng số sản phẩm đã bán
+const getTotalSoldItems = async (req, res) => {
+  try {
+    const total = await orderItemService.getTotalSoldItems();
+    res.status(200).json({ total });
+  } catch (error) {
+    res.status(500).json({ message: "Đã xảy ra lỗi", error: error.message });
+  }
+};
 
 module.exports = {
   getAllOrderItems,
@@ -81,4 +90,5 @@ module.exports = {
   updateOrderItem,
   deleteOrderItem,
   getTopSellingProducts,
+  getTotalSoldItems,
 };

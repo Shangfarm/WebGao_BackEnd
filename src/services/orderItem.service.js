@@ -118,6 +118,33 @@ const updateOrderStatus = async (orderId, status) => {
     throw new Error("Lỗi khi cập nhật trạng thái đơn hàng");
   }
 };
+// Tính tổng số sản phẩm đã bán (toàn hệ thống)
+const getTotalSoldItems = async () => {
+  const result = await OrderItem.aggregate([
+    {
+      $lookup: {
+        from: "orders",
+        localField: "orderId",
+        foreignField: "_id",
+        as: "order"
+      }
+    },
+    { $unwind: "$order" },
+    {
+      $match: {
+        "order.status": { $ne: "CANCELLED" } // Không tính đơn đã huỷ nếu cần
+      }
+    },
+    {
+      $group: {
+        _id: null,
+        total: { $sum: "$quantity" }
+      }
+    }
+  ]);
+
+  return result[0]?.total || 0;
+};
 
 module.exports = {
   getAllOrderItems,
@@ -128,4 +155,5 @@ module.exports = {
   getTopSellingProducts,
   revertSoldQuantityOnCancel,
   updateOrderStatus,
+  getTotalSoldItems,
 };
