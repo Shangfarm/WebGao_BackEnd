@@ -50,9 +50,10 @@ const getOrderById = async (req, res) => {
 // Tạo mới một đơn hàng
 const createOrder = async (req, res) => {
   try {
-    const { userId, userName, shippingAddress, shippingMethodId, paymentMethod, couponId } = req.body;
+    const userId = req.user.userId; // <-- LẤY TỪ TOKEN ĐÃ ĐĂNG NHẬP, KHÔNG LẤY TỪ BODY
+    const { userName, shippingAddress, shippingMethodId, paymentMethod, couponId } = req.body;
 
-    if (!userId || !userName || !shippingAddress || !shippingMethodId || !paymentMethod) {
+    if (!userName || !shippingAddress || !shippingMethodId || !paymentMethod) {
       return res.status(400).json({ message: "Thiếu thông tin bắt buộc để tạo đơn hàng" });
     }
 
@@ -349,6 +350,11 @@ const getOrders = async (req, res) => {
 
     // Lọc theo trạng thái xóa mềm
     const filter = { deletedAt: null }; // Chỉ lấy các đơn hàng chưa bị xóa mềm
+
+    // Nếu không phải admin thì chỉ lấy đơn của chính user đó
+    if (req.user.role !== 'admin') {
+      filter.userId = req.user.userId;
+    }
 
     // Lọc theo trạng thái đơn hàng
     if (status) {

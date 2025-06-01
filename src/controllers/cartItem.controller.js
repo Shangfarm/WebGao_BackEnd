@@ -41,7 +41,8 @@ const getCartItemById = async (req, res) => {
 // Thêm sản phẩm vào giỏ hàng
 const addCartItem = async (req, res) => {
   try {
-    const { userId, productId, quantity } = req.body;
+    const userId = req.user.userId; 
+    const { productId, quantity } = req.body;
 
     // Kiểm tra sản phẩm đã tồn tại trong giỏ hàng chưa
     const existingCartItem = await cartItemService.getCartItemByUserAndProduct(userId, productId);
