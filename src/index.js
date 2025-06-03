@@ -21,6 +21,7 @@ const promotionRoutes = require("./routes/promotion.route");
 const authRoutes = require('./routes/auth.route')
 const contactRouter = require('./routes/contact.route'); 
 const newsletterRoutes = require('./routes/newsletter.routes');
+const paymentRoute = require('./routes/payment.route');
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -30,6 +31,7 @@ const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/webgao";
 app.use(cors());
 app.use(bodyParser.json({ limit: '5mb' })); // ✅ Fix lỗi 413
 app.use(bodyParser.urlencoded({ extended: true, limit: '5mb' })); // ✅ Nếu có xài form
+app.use(express.json());
 
 // Kết nối MongoDB
 mongoose
@@ -57,6 +59,7 @@ app.use("/api/dashboard", orderRoutes);
 app.use("/api/auth", authRoutes);
 app.use('/api/contact', contactRouter);
 app.use('/api/newsletter', newsletterRoutes);
+app.use('/api/payment', paymentRoute);
 
 // Khởi động server
 app.listen(port, () => {

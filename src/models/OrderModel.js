@@ -9,7 +9,8 @@ const OrderSchema = new mongoose.Schema({
   paymentStatus: { type: String, enum: ['PENDING', 'PAID', 'FAILED'], default: 'PENDING' }, // Trạng thái thanh toán
   promotionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Promotion', default: null },
   totalCost: { type: Number }, // Tổng chưa giảm
-
+  transaction_id: { type: String },
+  payment_intent_id: { type: String },
   orderStatus: { 
     type: String, 
     enum: ['PENDING', 'CONFIRMED', 'SHIPPING', 'DELIVERED', 'CANCELLED'], 
