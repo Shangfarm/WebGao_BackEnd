@@ -440,6 +440,16 @@ const getRecentOrders = async (req, res) => {
   }
 };
 
+// ✅ Đặt đúng vị trí ở trên trước khi export
+const updateOrderAfterMomo = async (req, res) => {
+  try {
+    const updated = await Order.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json({ message: "Cập nhật đơn hàng thành công", data: updated });
+  } catch (err) {
+    res.status(500).json({ message: "Lỗi cập nhật đơn hàng", error: err.message });
+  }
+};
+
 module.exports = {
   getAllOrders,
   getOrderById,
@@ -452,4 +462,5 @@ module.exports = {
   getRevenueStats,
   getOrderStats,
   getRecentOrders,
+  updateOrderAfterMomo, 
 };

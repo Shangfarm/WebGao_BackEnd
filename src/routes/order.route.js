@@ -25,6 +25,7 @@ router.get("/:id", verifyToken, orderController.getOrderById)
 router.post("/", verifyToken, orderController.createOrder)
 
 //Route: Cập nhật thông tin đơn hàng – phải đăng nhập
+router.put("/momo/:id", verifyToken, orderController.updateOrderAfterMomo);
 router.put("/:id", verifyToken, orderController.updateOrder)
 
 //Route: Xóa mềm đơn hàng – phải đăng nhập
