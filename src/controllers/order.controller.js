@@ -443,10 +443,55 @@ const getRecentOrders = async (req, res) => {
 // ✅ Đặt đúng vị trí ở trên trước khi export
 const updateOrderAfterMomo = async (req, res) => {
   try {
-    const updated = await Order.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    res.json({ message: "Cập nhật đơn hàng thành công", data: updated });
+    const { id } = req.params;
+    const orderData = req.body;
+
+    // ✅ LUÔN cập nhật trạng thái thanh toán = "PAID"
+    const updatedOrder = await Order.findByIdAndUpdate(
+      id,
+      {
+        ...orderData,
+        paymentStatus: "PAID",
+      },
+      { new: true }
+    );
+
+    if (!updatedOrder) {
+      return res.status(404).json({ message: "Không tìm thấy đơn hàng" });
+    }
+
+    // Trừ kho...
+    for (const item of updatedOrder.items) {
+      const product = await Product.findById(item.productId);
+      if (product) {
+        if (product.stock < item.quantity) {
+          return res.status(400).json({ message: `Sản phẩm ${product.name} không đủ tồn kho để xử lý` });
+        }
+        product.stock -= item.quantity;
+        await product.save();
+      }
+    }
+
+    // Tạo OrderItem nếu cần
+    const existingOrderItems = await OrderItem.find({ orderId: id });
+    if (existingOrderItems.length === 0) {
+      const orderItems = updatedOrder.items.map(item => ({
+        orderId: updatedOrder._id,
+        productId: item.productId,
+        quantity: item.quantity,
+        price: item.price,
+      }));
+      await OrderItem.insertMany(orderItems);
+    }
+
+    res.status(200).json({
+      message: "✅ Đã cập nhật đơn hàng MoMo, trạng thái PAID và trừ kho thành công",
+      data: updatedOrder
+    });
+
   } catch (err) {
-    res.status(500).json({ message: "Lỗi cập nhật đơn hàng", error: err.message });
+    console.error("❌ Lỗi updateOrderAfterMomo:", err);
+    res.status(500).json({ message: "Lỗi cập nhật đơn hàng MoMo", error: err.message });
   }
 };
 
