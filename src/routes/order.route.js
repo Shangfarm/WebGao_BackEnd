@@ -40,4 +40,7 @@ router.patch("/:id/shipping-status", verifyToken, requireAdmin, orderController.
 //Route: Cập nhật trạng thái thanh toán – chỉ admin
 router.patch("/:id/payment-status", verifyToken, requireAdmin, orderController.updatePaymentStatus)
 
+// Route: Cập nhật trạng thái đơn hàng – chỉ Admin
+router.patch("/:id/order-status", verifyToken, requireAdmin, orderController.updateOrderStatus);
+
 module.exports = router;

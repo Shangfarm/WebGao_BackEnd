@@ -524,6 +524,34 @@ const updatePaymentStatus = async (req, res) => {
   }
 };
 
+// Cập nhật trạng thái đơn hàng (xác nhận đơn) – chỉ Admin
+const updateOrderStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { orderStatus } = req.body;
+
+    if (!["PENDING", "CONFIRMED", "SHIPPED", "CANCELLED"].includes(orderStatus)) {
+      return res.status(400).json({ message: "Trạng thái đơn hàng không hợp lệ" });
+    }
+
+    const updatedOrder = await Order.findByIdAndUpdate(
+      id,
+      { orderStatus },
+      { new: true }
+    );
+
+    if (!updatedOrder) {
+      return res.status(404).json({ message: "Không tìm thấy đơn hàng" });
+    }
+
+    res.status(200).json({
+      message: "Cập nhật trạng thái đơn hàng thành công",
+      data: updatedOrder,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Lỗi server", error: error.message });
+  }
+};
 module.exports = {
   getAllOrders,
   getOrderById,
@@ -538,4 +566,5 @@ module.exports = {
   getRecentOrders,
   updateOrderAfterMomo,
   updatePaymentStatus, 
+  updateOrderStatus,
 };
