@@ -495,6 +495,35 @@ const updateOrderAfterMomo = async (req, res) => {
   }
 };
 
+// Xuất các hàm để sử dụng trong routes// ✅ API cho admin cập nhật trạng thái thanh toán
+const updatePaymentStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!["PAID", "PENDING", "FAILED"].includes(status)) {
+      return res.status(400).json({ message: "Trạng thái không hợp lệ" });
+    }
+
+    const updated = await Order.findByIdAndUpdate(
+      id,
+      { paymentStatus: status },
+      { new: true }
+    );
+
+    if (!updated) {
+      return res.status(404).json({ message: "Không tìm thấy đơn hàng" });
+    }
+
+    res.status(200).json({
+      message: "Cập nhật trạng thái thanh toán thành công",
+      data: updated,
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Lỗi server", error: err.message });
+  }
+};
+
 module.exports = {
   getAllOrders,
   getOrderById,
@@ -507,5 +536,6 @@ module.exports = {
   getRevenueStats,
   getOrderStats,
   getRecentOrders,
-  updateOrderAfterMomo, 
+  updateOrderAfterMomo,
+  updatePaymentStatus, 
 };

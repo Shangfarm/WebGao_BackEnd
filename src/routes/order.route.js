@@ -37,4 +37,7 @@ router.put("/restore/:id", verifyToken, orderController.restoreOrder)
 //Route: Cập nhật trạng thái vận chuyển – chỉ admin
 router.patch("/:id/shipping-status", verifyToken, requireAdmin, orderController.updateShippingStatus)
 
+//Route: Cập nhật trạng thái thanh toán – chỉ admin
+router.patch("/:id/payment-status", verifyToken, requireAdmin, orderController.updatePaymentStatus)
+
 module.exports = router;
