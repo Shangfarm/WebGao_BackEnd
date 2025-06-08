@@ -40,6 +40,8 @@ const getTopSellingProducts = async () => {
       }
     },
     { $unwind: "$order" },
+    // ✅ BỎ QUA đơn hàng bị huỷ
+    { $match: { "order.orderStatus": { $ne: "CANCELLED" } } },
     {
       $group: {
         _id: "$productId",
@@ -132,7 +134,7 @@ const getTotalSoldItems = async () => {
     { $unwind: "$order" },
     {
       $match: {
-        "order.status": { $ne: "CANCELLED" } // Không tính đơn đã huỷ nếu cần
+        "order.orderStatus": { $ne: "CANCELLED" }  // ✅ Sửa lại đúng trường
       }
     },
     {
@@ -142,7 +144,6 @@ const getTotalSoldItems = async () => {
       }
     }
   ]);
-
   return result[0]?.total || 0;
 };
 

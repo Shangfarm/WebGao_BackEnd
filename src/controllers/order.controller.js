@@ -7,6 +7,8 @@ const ShippingMethod = require("../models/ShippingMethodModel"); // Import Shipp
 const Promotion = require("../models/PromotionModel"); // Import PromotionModel
 const promotionService = require("../services/promotion.service");
 const Product = require("../models/ProductModel");
+const { revertSoldQuantityOnCancel } = require("../services/orderItem.service");
+
 
 // Lấy tất cả đơn hàng
 const getAllOrders = async (req, res) => {
@@ -534,24 +536,49 @@ const updateOrderStatus = async (req, res) => {
       return res.status(400).json({ message: "Trạng thái đơn hàng không hợp lệ" });
     }
 
+    // ⚠️ Lấy đơn hàng trước khi cập nhật
+    const oldOrder = await Order.findById(id);
+    if (!oldOrder) {
+      return res.status(404).json({ message: "Không tìm thấy đơn hàng" });
+    }
+
+    // ✅ Nếu hủy đơn và đơn trước đó chưa bị huỷ
+    const shouldRevert = orderStatus === "CANCELLED" && oldOrder.orderStatus !== "CANCELLED";
+
+    // Cập nhật trạng thái
     const updatedOrder = await Order.findByIdAndUpdate(
       id,
       { orderStatus },
       { new: true }
     );
 
-    if (!updatedOrder) {
-      return res.status(404).json({ message: "Không tìm thấy đơn hàng" });
+    if (shouldRevert) {
+      const orderItems = await OrderItem.find({ orderId: id });
+
+      for (const item of orderItems) {
+        const product = await Product.findById(item.productId);
+        if (product) {
+          product.stock += item.quantity;
+          // ✅ Giảm số lượng đã bán (sold) khi đơn bị huỷ
+          product.sold = Math.max(0, (product.sold || 0) - item.quantity);
+          // ✅ Giảm số lượng đã bán trong tổng (nếu có dùng trường khác)
+          product.totalQuantity = Math.max(0, product.totalQuantity - item.quantity);
+          await product.save();
+        }
+      }
     }
 
     res.status(200).json({
       message: "Cập nhật trạng thái đơn hàng thành công",
       data: updatedOrder,
     });
+
   } catch (error) {
     res.status(500).json({ message: "Lỗi server", error: error.message });
   }
 };
+
+
 module.exports = {
   getAllOrders,
   getOrderById,
