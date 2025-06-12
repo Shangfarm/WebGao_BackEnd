@@ -408,7 +408,7 @@ const getOrders = async (req, res) => {
 const getRevenueStats = async (req, res) => {
   try {
     const { startDate, endDate, groupBy } = req.query;  // Lấy thêm groupBy từ query
-    console.log("Start Date:", startDate, "End Date:", endDate, "GroupBy:", groupBy);  // Log tham số ngày và kiểu nhóm
+    // console.log("Start Date:", startDate, "End Date:", endDate, "GroupBy:", groupBy);
 
     const revenueStats = await orderService.getRevenueStats(startDate, endDate, groupBy);  // Gọi service có truyền groupBy
 
